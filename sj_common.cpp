@@ -117,6 +117,12 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 		Group_Video.add(Video_SeekPos.setup("SeekPos", 0, 0.0, 1.0));
 	gui.add(&Group_Video);
 	
+	Group_Arduino.setup("Arduino");
+		Group_Arduino.add(Arduino_use_Table.setup("Ard_use_Table", true));
+		Group_Arduino.add(Arduino_use_RotStage.setup("Ard_use_RotStage", true));
+		Group_Arduino.add(Arduino_use_Shutter.setup("Ard_use_Shutter", true));
+	gui.add(&Group_Arduino);
+		
 	Group_RotStage.setup("RotState");
 		Group_RotStage.add(RotStage_threshToDetectBlack.setup("th:DetectBlack", 400, 10, 1000));
 		Group_RotStage.add(RotStage_timeout_1R_init.setup("t_1R_init", 55, 5, 100));
@@ -136,6 +142,10 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 	gui.add(&Group_PrjShutter);
 	
 	Group_DMX_test.setup("DMX test");
+		Group_DMX_test.add(DMX_test_Main.setup("DMX_test_Main", true));
+		Group_DMX_test.add(DMX_test_Back.setup("DMX_test_Back", true));
+		Group_DMX_test.add(DMX_test_L.setup("DMX_test_L", true));
+		Group_DMX_test.add(DMX_test_R.setup("DMX_test_R", true));
 		{
 			ofColor initColor = ofColor(0, 0, 255, 255);
 			ofColor minColor = ofColor(0, 0, 0, 0);

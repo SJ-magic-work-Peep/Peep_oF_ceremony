@@ -113,11 +113,18 @@ void DMX_SYSTEM::update_Param__Test(){
 	
 	ofColor color = Gui_Global->DMX_test__Color;
 	LIGHT_COLOR LightColor = LIGHT_COLOR(color.r / 255.0, color.g / 255.0, color.b / 255.0, 0.0);
-	LightParam[ int(DEVICE::Main) ].set_target(LightColor, PAN_TILT(0.0, 0.0, 0.0), d_Color);
-	LightParam[ int(DEVICE::Back) ].set_target(LightColor, PAN_TILT(0.0, 0.0, 0.0), d_Color);
 	
-	LightParam[ int(DEVICE::Moving_L) ].set_target(LightColor, PAN_TILT(Gui_Global->DMX_test__Pan_L, Gui_Global->DMX_test__Tilt_L, 0.0), d_Color);
-	LightParam[ int(DEVICE::Moving_R) ].set_target(LightColor, PAN_TILT(Gui_Global->DMX_test__Pan_R, Gui_Global->DMX_test__Tilt_R, 0.0), d_Color);
+	if(Gui_Global->DMX_test_Main)	LightParam[ int(DEVICE::Main) ].set_target(LightColor, PAN_TILT(0.0, 0.0, 0.0), d_Color);
+	else							LightParam[ int(DEVICE::Main) ].set_target(col_Black, PAN_TILT(0.0, 0.0, 0.0), d_Color);
+	
+	if(Gui_Global->DMX_test_Back)	LightParam[ int(DEVICE::Back) ].set_target(LightColor, PAN_TILT(0.0, 0.0, 0.0), d_Color);
+	else							LightParam[ int(DEVICE::Back) ].set_target(col_Black, PAN_TILT(0.0, 0.0, 0.0), d_Color);
+	
+	if(Gui_Global->DMX_test_L)		LightParam[ int(DEVICE::Moving_L) ].set_target(LightColor, PAN_TILT(Gui_Global->DMX_test__Pan_L, Gui_Global->DMX_test__Tilt_L, 0.0), d_Color);
+	else							LightParam[ int(DEVICE::Moving_L) ].set_target(col_Black, PAN_TILT(Gui_Global->DMX_test__Pan_L, Gui_Global->DMX_test__Tilt_L, 0.0), d_Color);
+	
+	if(Gui_Global->DMX_test_R)		LightParam[ int(DEVICE::Moving_R) ].set_target(LightColor, PAN_TILT(Gui_Global->DMX_test__Pan_R, Gui_Global->DMX_test__Tilt_R, 0.0), d_Color);
+	else							LightParam[ int(DEVICE::Moving_R) ].set_target(col_Black, PAN_TILT(Gui_Global->DMX_test__Pan_R, Gui_Global->DMX_test__Tilt_R, 0.0), d_Color);
 }
 
 /******************************

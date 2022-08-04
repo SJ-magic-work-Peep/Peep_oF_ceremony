@@ -39,11 +39,12 @@ ofApp::ofApp(){
 	
 #ifdef SJ_DEBUG_TIMING
 	timeout[ int(APP_STATE::Closing) ]					= 3000;
-	timeout[ int(APP_STATE::Closed) ]					= 3000;
+	// timeout[ int(APP_STATE::Closed) ]					= 3000;
 	// timeout[ int(APP_STATE::Closed) ]					= 120000;
+	timeout[ int(APP_STATE::Closed) ]					= 150000;
 #else
 	timeout[ int(APP_STATE::Closing) ]					= 30000;
-	timeout[ int(APP_STATE::Closed) ]					= 120000;
+	timeout[ int(APP_STATE::Closed) ]					= 150000;
 #endif
 	
 	
@@ -90,6 +91,14 @@ void ofApp::setup(){
 	********************/
 	setup_Gui();
 	load_gui_SettingFile();
+	
+#ifdef SJ_DEBUG_TIMING
+	Gui_Global->Arduino_use_RotStage = false;
+	Gui_Global->Arduino_use_Table = false;
+	Gui_Global->Arduino_use_Shutter = false;
+#endif
+	
+	/* */
 	load_BackImg();
 	
 	/********************
@@ -221,14 +230,12 @@ void ofApp::update(){
 	/********************
 	********************/
 	update_AllArduinos();
-#ifndef SJ_DEBUG_TIMING
 	if(!is_AllArduinoAlive()){
 		AppState = APP_STATE::CheckArdBeat_Setting;
 		DmxSystem.set_State(now, DMX_SYSTEM::STATE::Test);
 		mov.stop();
 	}
-#endif
-
+	
 	/********************
 	********************/
 	Process__GuiCommand();
@@ -261,18 +268,11 @@ void ofApp::update_AllArduinos(){
 /******************************
 ******************************/
 bool ofApp::is_AllArduinoAlive(){
-#ifdef SJ_DEBUG_TIMING
+	if( Gui_Global->Arduino_use_RotStage && !b_ArduinoAlive[ int(ARD_DEVICE::RotStage) ] )	return false;
+	if( Gui_Global->Arduino_use_Table && !b_ArduinoAlive[ int(ARD_DEVICE::Table) ] )		return false;
+	if( Gui_Global->Arduino_use_Shutter && !b_ArduinoAlive[ int(ARD_DEVICE::Shutter) ] )	return false;
+	
 	return true;
-#else
-	int counter = 0;
-	for(int i = 0; i < int(ARD_DEVICE::NumArdDevices); i++){
-		if(b_ArduinoAlive[i])	counter++;
-	}
-	
-	if( int(ARD_DEVICE::NumArdDevices) <= counter )	return true;
-	else											return false;
-	
-#endif
 }
 
 /******************************
@@ -421,21 +421,21 @@ void ofApp::Process__CheckArdBeat_Setting(){
 /******************************
 ******************************/
 void ofApp::Process__Initialize(){
-#ifdef SJ_DEBUG_TIMING
-	if(3000 < now - t_ThisStateFrom){
-		AppState = APP_STATE::SystemCheck;
-		t_ThisStateFrom = now;
+	if(!Gui_Global->Arduino_use_RotStage){
+		if(3000 < now - t_ThisStateFrom){
+			AppState = APP_STATE::SystemCheck;
+			t_ThisStateFrom = now;
+		}
+	}else{
+		if( (RotStage.get_LastResult() == ROT_STAGE::RESULT::OverRun) || (RotStage.get_LastResult() == ROT_STAGE::RESULT::Timeout) ){
+			AppState = APP_STATE::CheckArdBeat_Setting;
+			b_initializeError = true;
+			t_ThisStateFrom = now;
+		}else if(RotStage.get_LastResult() == ROT_STAGE::RESULT::Succeed){
+			AppState = APP_STATE::SystemCheck;
+			t_ThisStateFrom = now;
+		}
 	}
-#else
-	if( (RotStage.get_LastResult() == ROT_STAGE::RESULT::OverRun) || (RotStage.get_LastResult() == ROT_STAGE::RESULT::Timeout) ){
-		AppState = APP_STATE::CheckArdBeat_Setting;
-		b_initializeError = true;
-		t_ThisStateFrom = now;
-	}else if(RotStage.get_LastResult() == ROT_STAGE::RESULT::Succeed){
-		AppState = APP_STATE::SystemCheck;
-		t_ThisStateFrom = now;
-	}
-#endif
 }
 
 /******************************
@@ -553,23 +553,31 @@ void ofApp::Process__Before_Rot(){
 /******************************
 ******************************/
 void ofApp::Process__Rot(){
-#ifdef SJ_DEBUG_TIMING
-	if(timeout[ int(APP_STATE::Rot) ] < sound_Rotate.getPositionMS()){
+	/********************
+	********************/
+	bool b_Translate = false;
+	
+	/********************
+	********************/
+	if(!Gui_Global->Arduino_use_RotStage){
+		if(timeout[ int(APP_STATE::Rot) ] < sound_Rotate.getPositionMS()){
+			b_Translate = true;
+		}
+	}else{
+		if( (RotStage.get_LastResult() == ROT_STAGE::RESULT::Succeed) || (RotStage.get_LastResult() == ROT_STAGE::RESULT::OverRun) ){
+			b_Translate = true;
+		}
+	}
+	
+	/********************
+	********************/
+	if(b_Translate){
 		AppState = APP_STATE::RotKime_Break;
 		
 		t_ThisStateFrom = now;
 		
 		DmxSystem.set_State(now, DMX_SYSTEM::STATE::Kime);
 	}
-#else
-	if( (RotStage.get_LastResult() == ROT_STAGE::RESULT::Succeed) || (RotStage.get_LastResult() == ROT_STAGE::RESULT::OverRun) ){
-		AppState = APP_STATE::RotKime_Break;
-		
-		t_ThisStateFrom = now;
-		
-		DmxSystem.set_State(now, DMX_SYSTEM::STATE::Kime);
-	}
-#endif
 }
 
 /******************************
@@ -625,7 +633,8 @@ void ofApp::Process__Closed(){
 /******************************
 ******************************/
 void ofApp::Process__ReadyToNext(){
-	if(timeout[ int(APP_STATE::ReadyToNext) ] < now - t_ThisStateFrom){
+	// if( timeout[ int(APP_STATE::ReadyToNext) ] < now - t_ThisStateFrom ){
+	if( voice.get_state() == VOICE::STATE::stop ){
 		AppState = APP_STATE::Movie;
 		ofResetElapsedTimeCounter(); 	// must be called before update "now"
 		now = ofGetElapsedTimeMillis();	// counter reset後なので、改めて時刻取得する必要あり(not "now").
@@ -691,18 +700,23 @@ void ofApp::draw_on_eachState(){
 			break;
 		case APP_STATE::Mov_Break:
 			draw__timeout_passed(timeout[ int(APP_STATE::Mov_Break) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Before_TableUp:
 			draw__timeout_SoundPos(sound_Table, timeout[ int(APP_STATE::Before_TableUp) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::TableUp:
 			draw__timeout_SoundPos(sound_Table, timeout[ int(APP_STATE::TableUp) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::UpKime_wait:
 			draw__timeout_SoundPos(sound_Table, timeout[ int(APP_STATE::UpKime_wait) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::UpKime_Break:
 			draw__timeout_passed(timeout[ int(APP_STATE::UpKime_Break) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Speech:
 			draw__passed();
@@ -710,27 +724,35 @@ void ofApp::draw_on_eachState(){
 			break;
 		case APP_STATE::Speech_Break:
 			draw__timeout_passed(timeout[ int(APP_STATE::Speech_Break) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Before_Rot:
 			draw__timeout_SoundPos(sound_Rotate, timeout[ int(APP_STATE::Before_Rot) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Rot:
 			draw__timeout_SoundPos(sound_Rotate, timeout[ int(APP_STATE::Rot) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::RotKime_wait:
 			draw__timeout_SoundPos(sound_Rotate, timeout[ int(APP_STATE::RotKime_wait) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::RotKime_Break:
 			draw__timeout_passed(timeout[ int(APP_STATE::RotKime_Break) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Closing:
 			draw__timeout_passed(timeout[ int(APP_STATE::Closing) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Closed:
 			draw__timeout_passed(timeout[ int(APP_STATE::Closed) ]);
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::ReadyToNext:
-			draw__timeout_passed(timeout[ int(APP_STATE::ReadyToNext) ]);
+			draw__passed();
+			update_fboMonitor__Black();
 			break;
 		case APP_STATE::SystemPausedForTest:
 			// nothing to add.
@@ -806,15 +828,21 @@ void ofApp::draw__passed(){
 void ofApp::draw__CheckArdBeat_Setting(){
 	/********************
 	********************/
-	if(b_ArduinoAlive[ int(ARD_DEVICE::Table) ])	{ ofSetColor(0, 0, 255, 255); font_L.drawString("OK", 1034, 134); }
-	else											{ ofSetColor(255, 0, 0, 255); font_L.drawString("NG", 1034, 134); }
+	float Grayout = 100;
+	if(!Gui_Global->Arduino_use_Table)						{ ofSetColor(Grayout);			font_L.drawString("--", 1034, 134); }
+	else if(b_ArduinoAlive[ int(ARD_DEVICE::Table) ])		{ ofSetColor(0, 0, 255, 255);	font_L.drawString("OK", 1034, 134); }
+	else													{ ofSetColor(255, 0, 0, 255);	font_L.drawString("NG", 1034, 134); }
 	
-	if(b_ArduinoAlive[ int(ARD_DEVICE::RotStage) ])	{ ofSetColor(0, 0, 255, 255); font_L.drawString("OK", 1034, 193); }
-	else											{ ofSetColor(255, 0, 0, 255); font_L.drawString("NG", 1034, 193); }
+	if(!Gui_Global->Arduino_use_RotStage)					{ ofSetColor(Grayout);			font_L.drawString("--", 1034, 193); }
+	else if(b_ArduinoAlive[ int(ARD_DEVICE::RotStage) ])	{ ofSetColor(0, 0, 255, 255);	font_L.drawString("OK", 1034, 193); }
+	else													{ ofSetColor(255, 0, 0, 255);	font_L.drawString("NG", 1034, 193); }
 	
-	if(b_ArduinoAlive[ int(ARD_DEVICE::Shutter) ])	{ ofSetColor(0, 0, 255, 255); font_L.drawString("OK", 1034, 251); }
-	else											{ ofSetColor(255, 0, 0, 255); font_L.drawString("NG", 1034, 251); }
+	if(!Gui_Global->Arduino_use_Shutter)					{ ofSetColor(Grayout);			font_L.drawString("--", 1034, 251); }
+	else if(b_ArduinoAlive[ int(ARD_DEVICE::Shutter) ])		{ ofSetColor(0, 0, 255, 255);	font_L.drawString("OK", 1034, 251); }
+	else													{ ofSetColor(255, 0, 0, 255);	font_L.drawString("NG", 1034, 251); }
 	
+	/********************
+	********************/
 	if(b_initializeError){
 		ofSetColor(255, 0, 0, 255);
 		font_M.drawString("> initialize error. Please check RotStage.", 737, 334);

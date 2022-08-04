@@ -57,6 +57,11 @@ public:
 		ofxToggle Video_Button_Seek;
 		ofxFloatSlider Video_SeekPos;
 		
+	ofxGuiGroup Group_Arduino;
+		ofxToggle Arduino_use_RotStage;
+		ofxToggle Arduino_use_Table;
+		ofxToggle Arduino_use_Shutter;
+		
 	ofxGuiGroup Group_RotStage;
 		ofxFloatSlider RotStage_threshToDetectBlack;
 		ofxFloatSlider RotStage_timeout_1R_init;
@@ -73,6 +78,10 @@ public:
 		ofxFloatSlider Shutter_Angle_Close;
 		
 	ofxGuiGroup Group_DMX_test;
+		ofxToggle DMX_test_Main;
+		ofxToggle DMX_test_Back;
+		ofxToggle DMX_test_L;
+		ofxToggle DMX_test_R;
 		ofxColorSlider DMX_test__Color;
 		ofxFloatSlider DMX_test__Pan_L;
 		ofxFloatSlider DMX_test__Pan_R;

@@ -18,6 +18,7 @@ public:
 		stop,
 		interval,
 		waitEnd,
+		LastOne,
 	};
 private:
 	

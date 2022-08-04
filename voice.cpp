@@ -206,9 +206,7 @@ void VOICE::StateChart(int now){
 	/********************
 	********************/
 	if(b_stop){
-		State = STATE::stop;
-		shuffle(order);
-		id = 0;
+		State = STATE::LastOne;
 	}
 	
 	/********************
@@ -235,6 +233,14 @@ void VOICE::StateChart(int now){
 			if(!Sounds[ order[id] ]->isPlaying()){
 				State = STATE::interval;
 				prep_NextSoundInfo();
+				t_From = now;
+			}
+			break;
+		case STATE::LastOne:
+			if(!Sounds[ order[id] ]->isPlaying()){
+				State = STATE::stop;
+				shuffle(order);
+				id = 0;
 				t_From = now;
 			}
 			break;
