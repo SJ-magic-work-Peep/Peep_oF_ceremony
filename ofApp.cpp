@@ -24,31 +24,31 @@ ofApp::ofApp(){
 	timeout[ int(APP_STATE::Initialize) ]				= 0;
 	timeout[ int(APP_STATE::SystemCheck) ]				= 0;
 	timeout[ int(APP_STATE::Movie) ]					= 0;
-	timeout[ int(APP_STATE::Mov_Break) ]				= 3000;
+	// timeout[ int(APP_STATE::Mov_Break) ]				= 3000;
+	timeout[ int(APP_STATE::Mov_Break) ]				= 1400;
 	timeout[ int(APP_STATE::Before_TableUp) ]			= 2000;
 	timeout[ int(APP_STATE::TableUp) ]					= 12011;
-	// timeout[ int(APP_STATE::TableUp) ]					= 12032;
 	timeout[ int(APP_STATE::UpKime_wait) ]				= 19584;
 	timeout[ int(APP_STATE::UpKime_Break) ]				= 5737;
 	timeout[ int(APP_STATE::Speech) ]					= 0;
-	timeout[ int(APP_STATE::Speech_Break) ]				= 1498;
+	// timeout[ int(APP_STATE::Speech_Break) ]				= 1498;
+	timeout[ int(APP_STATE::Speech_Break) ]				= 2498;
 	timeout[ int(APP_STATE::Before_Rot) ]				= 2000;
 	timeout[ int(APP_STATE::Rot) ]						= 31000;
 	timeout[ int(APP_STATE::RotKime_wait) ]				= 3000;
-	timeout[ int(APP_STATE::RotKime_Break) ]			= 12366;
+	timeout[ int(APP_STATE::RotKime_Break) ]			= 10000;
 	
 #ifdef SJ_DEBUG_TIMING
 	timeout[ int(APP_STATE::Closing) ]					= 3000;
 	// timeout[ int(APP_STATE::Closed) ]					= 3000;
-	// timeout[ int(APP_STATE::Closed) ]					= 120000;
-	timeout[ int(APP_STATE::Closed) ]					= 150000;
+	timeout[ int(APP_STATE::Closed) ]					= 60000;
 #else
 	timeout[ int(APP_STATE::Closing) ]					= 30000;
-	timeout[ int(APP_STATE::Closed) ]					= 150000;
+	timeout[ int(APP_STATE::Closed) ]					= 60000;
 #endif
 	
-	
-	timeout[ int(APP_STATE::ReadyToNext) ]				= 5000;
+	timeout[ int(APP_STATE::LastVoice) ]				= 0;
+	timeout[ int(APP_STATE::ReadyToNext) ]				= 30000;
 	
 	timeout[ int(APP_STATE::SystemPausedForTest) ]		= 0;
 }
@@ -58,13 +58,23 @@ ofApp::ofApp(){
 ofApp::~ofApp(){
 	if(Gui_Global)	delete Gui_Global;
 	if(fp_Log)		fclose(fp_Log);
+	
+	printf("> main::dtr\n");
+	fflush(stdout);
 }
 
 /******************************
+■How to exit an App on KeyPressed
+	https://forum.openframeworks.cc/t/how-to-exit-an-app-on-keypressed/14664/5
 ******************************/
 void ofApp::exit(){
-	printf("Good-bye\n");
-	fflush(stdout);
+	if(!b_quit){
+		b_quit = true;
+		ofExit();
+	}else{
+		printf("main::exit\n");
+		fflush(stdout);
+	}
 }
 
 /******************************
@@ -390,6 +400,9 @@ void ofApp::StateChart_App(){
 		case APP_STATE::Closed:
 			Process__Closed();
 			break;
+		case APP_STATE::LastVoice:
+			Process__LastVoice();
+			break;
 		case APP_STATE::ReadyToNext:
 			Process__ReadyToNext();
 			break;
@@ -555,23 +568,23 @@ void ofApp::Process__Before_Rot(){
 void ofApp::Process__Rot(){
 	/********************
 	********************/
-	bool b_Translate = false;
+	bool b_Transition = false;
 	
 	/********************
 	********************/
 	if(!Gui_Global->Arduino_use_RotStage){
 		if(timeout[ int(APP_STATE::Rot) ] < sound_Rotate.getPositionMS()){
-			b_Translate = true;
+			b_Transition = true;
 		}
 	}else{
 		if( (RotStage.get_LastResult() == ROT_STAGE::RESULT::Succeed) || (RotStage.get_LastResult() == ROT_STAGE::RESULT::OverRun) ){
-			b_Translate = true;
+			b_Transition = true;
 		}
 	}
 	
 	/********************
 	********************/
-	if(b_Translate){
+	if(b_Transition){
 		AppState = APP_STATE::RotKime_Break;
 		
 		t_ThisStateFrom = now;
@@ -618,13 +631,20 @@ void ofApp::Process__Closing(){
 /******************************
 ******************************/
 void ofApp::Process__Closed(){
-	/********************
-	********************/
 	if(timeout[ int(APP_STATE::Closed) ] < now - t_ThisStateFrom){
-		AppState = APP_STATE::ReadyToNext;
+		AppState = APP_STATE::LastVoice;
 		t_ThisStateFrom = now;
 		
 		voice.PlayStop();
+	}
+}
+
+/******************************
+******************************/
+void ofApp::Process__LastVoice(){
+	if( voice.get_state() == VOICE::STATE::stop ){
+		AppState = APP_STATE::ReadyToNext;
+		t_ThisStateFrom = now;
 		
 		c_Loop_for_debug++;
 	}
@@ -633,8 +653,7 @@ void ofApp::Process__Closed(){
 /******************************
 ******************************/
 void ofApp::Process__ReadyToNext(){
-	// if( timeout[ int(APP_STATE::ReadyToNext) ] < now - t_ThisStateFrom ){
-	if( voice.get_state() == VOICE::STATE::stop ){
+	if( timeout[ int(APP_STATE::ReadyToNext) ] < now - t_ThisStateFrom ){
 		AppState = APP_STATE::Movie;
 		ofResetElapsedTimeCounter(); 	// must be called before update "now"
 		now = ofGetElapsedTimeMillis();	// counter reset後なので、改めて時刻取得する必要あり(not "now").
@@ -731,7 +750,8 @@ void ofApp::draw_on_eachState(){
 			update_fboMonitor__Black();
 			break;
 		case APP_STATE::Rot:
-			draw__timeout_SoundPos(sound_Rotate, timeout[ int(APP_STATE::Rot) ]);
+			// draw__timeout_SoundPos(sound_Rotate, timeout[ int(APP_STATE::Rot) ]);
+			draw__passed();
 			update_fboMonitor__Black();
 			break;
 		case APP_STATE::RotKime_wait:
@@ -750,8 +770,12 @@ void ofApp::draw_on_eachState(){
 			draw__timeout_passed(timeout[ int(APP_STATE::Closed) ]);
 			update_fboMonitor__Black();
 			break;
-		case APP_STATE::ReadyToNext:
+		case APP_STATE::LastVoice:
 			draw__passed();
+			update_fboMonitor__Black();
+			break;
+		case APP_STATE::ReadyToNext:
+			draw__timeout_passed(timeout[ int(APP_STATE::ReadyToNext) ]);
 			update_fboMonitor__Black();
 			break;
 		case APP_STATE::SystemPausedForTest:
@@ -913,9 +937,15 @@ ofFbo& ofApp::getFbo_Monitor(){
 }
 
 /******************************
+■How to exit an App on KeyPressed
+	https://forum.openframeworks.cc/t/how-to-exit-an-app-on-keypressed/14664/4
 ******************************/
 void ofApp::keyPressed(int key){
 	switch(key){
+		case 'q':
+			// ofExit();
+			break;
+			
 		case 'd':
 			Gui_Global->b_Disp = !Gui_Global->b_Disp;
 			break;

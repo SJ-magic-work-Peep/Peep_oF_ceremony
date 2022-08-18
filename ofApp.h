@@ -46,6 +46,7 @@ private:
 		RotKime_Break,
 		Closing,
 		Closed,
+		LastVoice,
 		ReadyToNext,
 		
 		SystemPausedForTest,
@@ -84,6 +85,8 @@ private:
 	ofSoundPlayer sound_Speech;
 	
 	ofImage img_Checker;
+	
+	bool b_quit = false;
 	
 	/********************
 	********************/
@@ -132,6 +135,7 @@ private:
 	void Process__RotKime_Break();
 	void Process__Closing();
 	void Process__Closed();
+	void Process__LastVoice();
 	void Process__ReadyToNext();
 	
 	void draw_on_eachState();

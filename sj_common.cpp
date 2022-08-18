@@ -114,7 +114,7 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 	********************/
 	Group_Video.setup("Video");
 		Group_Video.add(Video_Button_Seek.setup("Seek", false));
-		Group_Video.add(Video_SeekPos.setup("SeekPos", 0, 0.0, 1.0));
+		Group_Video.add(Video_SeekPos.setup("SeekPos", 0.98, 0.0, 1.0));
 	gui.add(&Group_Video);
 	
 	Group_Arduino.setup("Arduino");
@@ -124,7 +124,7 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 	gui.add(&Group_Arduino);
 		
 	Group_RotStage.setup("RotState");
-		Group_RotStage.add(RotStage_threshToDetectBlack.setup("th:DetectBlack", 400, 10, 1000));
+		Group_RotStage.add(RotStage_threshToDetectBlack.setup("th:DetectBlack", 250, 10, 1000));
 		Group_RotStage.add(RotStage_timeout_1R_init.setup("t_1R_init", 55, 5, 100));
 		Group_RotStage.add(RotStage_timeout_1R_operation.setup("t_1R_ope", 32, 5, 100));
 	gui.add(&Group_RotStage);

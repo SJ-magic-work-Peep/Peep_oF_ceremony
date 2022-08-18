@@ -130,7 +130,8 @@ void VOICE::load_music_table()
 	for(int i = 0; i < Sounds.size(); i++){
 		Sounds[i] = new ofSoundPlayer;
 		
-		Sounds[i]->loadSound(dirname + SoundFileNames[i]->c_str());
+		// Sounds[i]->load(dirname + SoundFileNames[i]->c_str());
+		Sounds[i]->load(dirname + (*SoundFileNames[i]));
 		Sounds[i]->setLoop(false);
 		Sounds[i]->setMultiPlay(true);
 		Sounds[i]->setVolume(1.0);
