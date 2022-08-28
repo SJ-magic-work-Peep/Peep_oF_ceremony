@@ -123,14 +123,15 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 		Group_Arduino.add(Arduino_use_Shutter.setup("Ard_use_Shutter", true));
 	gui.add(&Group_Arduino);
 		
-	Group_RotStage.setup("RotState");
+	Group_RotStage.setup("RotStage");
 		Group_RotStage.add(RotStage_threshToDetectBlack.setup("th:DetectBlack", 250, 10, 1000));
 		Group_RotStage.add(RotStage_timeout_1R_init.setup("t_1R_init", 55, 5, 100));
 		Group_RotStage.add(RotStage_timeout_1R_operation.setup("t_1R_ope", 32, 5, 100));
 	gui.add(&Group_RotStage);
 	
 	Group_Table.setup("Table");
-		Group_Table.add(Table_dAngle_Down.setup("dAngle_Down", 28, 0, 90));
+		// Group_Table.add(Table_dAngle_Down.setup("dAngle_Down", 28, 0, 90));
+		Group_Table.add(Table_dAngle_Down.setup("dAngle_Down", 26, 0, 90));
 		Group_Table.add(Table_dAngle_Up.setup("dAngle_Up", 37, 0, 90));
 		Group_Table.add(Table_PushTime.setup("PushTime", 700, 100, 2000));
 		Group_Table.add(Table_ReverseDirection.setup("Reverse", false));

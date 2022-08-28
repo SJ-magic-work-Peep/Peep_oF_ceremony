@@ -854,15 +854,15 @@ void ofApp::draw__CheckArdBeat_Setting(){
 	********************/
 	float Grayout = 100;
 	if(!Gui_Global->Arduino_use_Table)						{ ofSetColor(Grayout);			font_L.drawString("--", 1034, 134); }
-	else if(b_ArduinoAlive[ int(ARD_DEVICE::Table) ])		{ ofSetColor(0, 0, 255, 255);	font_L.drawString("OK", 1034, 134); }
+	else if(b_ArduinoAlive[ int(ARD_DEVICE::Table) ])		{ ofSetColor(0, 255, 0, 255);	font_L.drawString("OK", 1034, 134); }
 	else													{ ofSetColor(255, 0, 0, 255);	font_L.drawString("NG", 1034, 134); }
 	
 	if(!Gui_Global->Arduino_use_RotStage)					{ ofSetColor(Grayout);			font_L.drawString("--", 1034, 193); }
-	else if(b_ArduinoAlive[ int(ARD_DEVICE::RotStage) ])	{ ofSetColor(0, 0, 255, 255);	font_L.drawString("OK", 1034, 193); }
+	else if(b_ArduinoAlive[ int(ARD_DEVICE::RotStage) ])	{ ofSetColor(0, 255, 0, 255);	font_L.drawString("OK", 1034, 193); }
 	else													{ ofSetColor(255, 0, 0, 255);	font_L.drawString("NG", 1034, 193); }
 	
 	if(!Gui_Global->Arduino_use_Shutter)					{ ofSetColor(Grayout);			font_L.drawString("--", 1034, 251); }
-	else if(b_ArduinoAlive[ int(ARD_DEVICE::Shutter) ])		{ ofSetColor(0, 0, 255, 255);	font_L.drawString("OK", 1034, 251); }
+	else if(b_ArduinoAlive[ int(ARD_DEVICE::Shutter) ])		{ ofSetColor(0, 255, 0, 255);	font_L.drawString("OK", 1034, 251); }
 	else													{ ofSetColor(255, 0, 0, 255);	font_L.drawString("NG", 1034, 251); }
 	
 	/********************
